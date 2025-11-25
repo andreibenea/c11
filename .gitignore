@@ -1,0 +1,46 @@
+# Byte-compiled / cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/
+.env*/          # in case you name it .env3.12 or similar
+virtualenv/
+
+# Build / distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Logs / debugging
+*.log
+*.sqlite3
+*.db
+*.db-journal
+
+# Testing / coverage
+.coverage
+.cache/
+htmlcov/
+
+# IDE / editor folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Environment / config
+*.env
+*.ini
+*.cfg
+
+# Python-specific tooling
+pip-wheel-metadata/
