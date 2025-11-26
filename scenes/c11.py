@@ -2,17 +2,18 @@ c11 = {
     "id": "c11",
     "name": "Quarters C-11",
     "description": (
-        "You wake up groggy on your bed in Vault 123. The room is dim—only the "
-        "emergency floor strips glow faint blue. Your left forearm is bare. "
-        "Your Pip-Boy is missing. The door is sealed, its status light glowing yellow."
+        "You wake with a sour, metallic taste in your mouth and a throbbing ache behind your eyes.\n"
+        "The room is dim — only thin bands of emergency floor lighting pulse in a faint blue rhythm.\n"
+        "Your left forearm is bare. Your Pip-Boy is gone. The door's indicator glows a steady yellow, signaling a local lockdown.\n"
+        "Something is very wrong in Vault 123… and someone wanted you unconscious when it happened."
     ),
     "objects": {
         "bed": {
             "id": "bed",
             "kind": "scenery",
             "description": (
-                "The bed is a mess—twisted sheets, pillow on the floor. It looks like "
-                "someone pulled you out of it rather than waking you."
+                "The sheets are twisted and half-dragged to the floor, as if someone pulled you out of bed rather than waking you.\n"
+                "The pillow lies several feet away — nothing about this suggests a peaceful rest."
             ),
             "can_take": False,
             "can_talk": False,
@@ -22,9 +23,9 @@ c11 = {
             "id": "locker",
             "kind": "scenery",
             "description": (
-                "The steel locker is slightly ajar. A dent near the handle suggests "
-                "it was forced open. Inside, your jumpsuit is folded, but your "
-                "belongings box and Pip-Boy cradle are missing."
+                "Your locker sits cracked open, the metal around the latch dented from forced entry.\n"
+                "Inside, your jumpsuit is still neatly folded — but the valuables box and Pip-Boy cradle are missing.\n"
+                "Whoever drugged you wasn't after clothes. They came for your gear."
             ),
             "can_take": False,
             "can_talk": False,
@@ -34,8 +35,8 @@ c11 = {
             "id": "floor",
             "kind": "scenery",
             "description": (
-                "A small plastic syringe cap lies on the floor—standard Medbay issue. "
-                "You don't remember receiving any treatment."
+                "A small, sky-blue syringe cap rests near your foot. It's standard Medbay equipment — a sterile cap used for anesthetic injectors.\n"
+                "You don't remember visiting Medbay. You don't remember anything at all before waking here."
             ),
             "can_take": False,
             "can_talk": False,
@@ -45,8 +46,9 @@ c11 = {
             "id": "desk",
             "kind": "scenery",
             "description": (
-                "A metal desk is bolted to the floor. On top of it sits a dark, unpowered "
-                "terminal and a single Vault-Tec holotape."
+                "A steel desk is bolted into the floor, as all Vault furniture is.\n"
+                "An unpowered terminal sits dark and lifeless beside a single Vault-Tec holotape.\n"
+                "Without main power, the terminal won't even cough out an error message."
             ),
             "can_take": False,
             "can_talk": False,
@@ -56,8 +58,8 @@ c11 = {
             "id": "terminal",
             "kind": "scenery",
             "description": (
-                "The terminal's screen is completely dark. With emergency power only, it "
-                "won't even attempt to boot."
+                "The screen is pitch black. Emergency power bypasses terminal circuits to conserve energy, leaving it completely unresponsive.\n"
+                "Whatever information it holds is locked behind the outage… or sabotage."
             ),
             "can_take": False,
             "can_talk": False,
@@ -67,8 +69,8 @@ c11 = {
             "id": "holotape",
             "kind": "actionable",
             "description": (
-                "A Vault-Tec holotape with a worn label. Without your Pip-Boy, there's no "
-                "way to read or play whatever's on it."
+                "A worn Vault-Tec holotape labeled in faded pen. Without your Pip-Boy, there's no way to read the data.\n"
+                "It's just a silent, sealed message waiting for the tool that's been stolen from you."
             ),
             "can_take": True,
             "can_talk": False,
@@ -79,8 +81,8 @@ c11 = {
             "id": "vent",
             "kind": "scenery",
             "description": (
-                "The ventilation grate clicks on and off, cycling air irregularly. "
-                "Something in the system is struggling."
+                "A ventilation grate hums inconsistently, cycling bursts of air through the room.\n"
+                "The rhythm is irregular, as if part of the environmental system is failing… or being tampered with. It smells faintly of ozone and sterilizer."
             ),
             "can_take": False,
             "can_talk": False,
@@ -90,7 +92,8 @@ c11 = {
             "id": "intercom",
             "kind": "actionable",
             "description": (
-                "A standard Vault intercom used for communication with Security."
+                "A standard Vault intercom panel, scratched from years of use. Through it, Security can monitor and communicate with residents.\n"
+                "It's your only link to the outside of this locked room."
             ),
             "can_take": False,
             "can_talk": True,
@@ -101,11 +104,9 @@ c11 = {
             "id": "pillow",
             "kind": "hint",
             "description": (
-                "You pick up the pillow from the floor. The case is slightly unzipped. "
-                "Inside the pillowcase, you find a tightly folded note. It reads: "
-                "\"You're in danger! Come find me and don't trust anyone!\"\n"
-                "You recognize the hurried scribble — it's your friend Juno.\n"
-                "You put the pillow back, wondering how or when that information might be useful..."
+                "*The pillow from the floor is unzipped slightly. Tucked inside the case is a tightly folded note written in hurried strokes:\n"
+                "“You're in danger. Come find me. Don't trust anyone.”\n"
+                "The handwriting is unmistakable — Juno's. You return the pillow to where it was, pulse quickening. She must've planted this before everything went dark.*"
             ),
             "can_take": False,
             "can_talk": False,
@@ -115,10 +116,10 @@ c11 = {
             "id": "door",
             "kind": "actionable",
             "description": (
-                "A standard sliding Vault door. The status light glows yellow — local lockdown. "
-                "Normally it opens at a touch, but right now it's sealed by an override from outside."
+                "A reinforced sliding Vault door with a glowing yellow status light — local lockdown.\n"
+                "Under normal conditions it would open at a touch. Now it's sealed by an override from the outside."
             ),
-            "description_unlocked": "A standard sliding Vault door. The status light glows green - it's unlocked.",
+            "description_unlocked": "A reinforced sliding Vault door with its status light glowing green. The lockdown has been cleared; the door will open on command.",
             "can_take": False,
             "can_talk": False,
             "is_exit": True,
@@ -133,10 +134,10 @@ c11 = {
             "unlock_on_use": False,  # if using it performs unlock
             # descriptions
             "description_locked": (
-                "A standard sliding Vault door. The status light glows yellow — local lockdown. "
-                "Normally it opens at a touch, but right now it's sealed by an override from outside."
+                "A reinforced sliding Vault door with a glowing yellow status light — local lockdown.\n"
+                "Under normal conditions it would open at a touch. Now it's sealed by an override from the outside."
             ),
-            "description_unlocked": "A standard sliding Vault door. The status light glows green - it's unlocked.",
+            "description_unlocked": "A reinforced sliding Vault door with its status light glowing green. The lockdown has been cleared; the door will open on command.",
             # optional: custom text or event when attempting to open
             "on_attempt": None,
             "on_unlock": None,

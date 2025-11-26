@@ -260,7 +260,7 @@ Keep commands simple: one verb plus a target or modifier."""
                 return print(self.scene["objects"][target]["description"])
             case "look_around":
                 print("You take a look around the room...")
-                print(f"The following objects catch your attention:")
+                print(f"The following objects catch your attention. They might provide valuable information if examined closely.")
                 print(list(self.scene_items.keys()))
                 for npc in self.scene_npcs:
                     print(f"You see {npc.name} standing there.")
@@ -283,7 +283,7 @@ Keep commands simple: one verb plus a target or modifier."""
                         if self.scene_items[target]["needs_item"]:
                             return print(
                                 f"You'll need to have a(n) '{self.scene_items[target]["needs_item"]}' before you can use this {target}.\n"
-                                "It might be worth picking it up for later..."
+                                "It might be worth picking up for later..."
                             )
                         return print("Seems useful, you should take that with you!")
                     elif self.scene["objects"][target]["can_talk"]:
