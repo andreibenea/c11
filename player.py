@@ -19,4 +19,3 @@ class Player(NonPlayerCharacter):
 
     def add_item_to_inventory(self, item: dict):
         self.inventory.append(item)
-        print(f"The {str(item["id"]).lower()} was added to your inventory!")
