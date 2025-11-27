@@ -273,18 +273,6 @@ Keep commands simple: one verb plus a target or modifier.""",
                 for npc in self.scene_npcs:
                     if target == npc.id:
                         return self.output.emit(npc.description)
-                if target in self.scene_items:
-                    if self.scene_items[target]["kind"] == "hint":
-                        if (
-                            self.scene_items[target]["dialog_id"]
-                            not in self.scene_hints
-                        ):
-                            self.scene_hints.append(
-                                self.scene_items[target]["dialog_id"]
-                            )
-                    return self.output.emit(
-                        self.scene["objects"][target]["description"]
-                    )
                 if target in self.scene["exits"]:
                     if self.scene["exits"][target]["status"] == "locked":
                         self.output.emit(
@@ -299,6 +287,18 @@ Keep commands simple: one verb plus a target or modifier.""",
                         f"It should lead to '{self.scene['exits'][target]['destination']}'."
                     )
                     return
+                if target in self.scene_items:
+                    if self.scene_items[target]["kind"] == "hint":
+                        if (
+                            self.scene_items[target]["dialog_id"]
+                            not in self.scene_hints
+                        ):
+                            self.scene_hints.append(
+                                self.scene_items[target]["dialog_id"]
+                            )
+                    return self.output.emit(
+                        self.scene["objects"][target]["description"], "hint"
+                    )
                 return self.output.emit(
                     "You can't seem to find that here. If it should be, check your spelling and try again.",
                     "system",
