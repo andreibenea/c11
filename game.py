@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from player import Player
+    from event_emitter import Output
 
 import sys
 from commands import COMMANDS
@@ -10,12 +11,13 @@ from dialogues import DIALOGUES
 
 
 class Game:
-    def __init__(self, player: "Player", world):
+    def __init__(self, player: "Player", world, output: "Output"):
         # Store references to the active player entity and the world model.
         # Initialize overall game-state toggles.
         # Set current_scene_id based on the player's starting location.
         self.player = player
         self.world = world
+        self.output = output
         self.running = True
         self.current_scene_id = player.scene_id
 
@@ -25,7 +27,7 @@ class Game:
         # 2. Continuously read user input.
         # 3. Ignore blank lines.
         # 4. Route input to the command handler.
-        print(self.describe_current_scene())
+        self.output.emit(self.describe_current_scene(), "scene")
         while self.running:
             raw = input("> ").strip().lower()
             if not raw:
@@ -36,7 +38,7 @@ class Game:
         # Transition the player to a new scene.
         # Updates internal scene pointer and prints the scene's description.
         self.current_scene_id = scene_id
-        print(self.describe_current_scene())
+        self.output.emit(self.describe_current_scene(), "scene")
 
     def describe_current_scene(self) -> str:
         # Fetch the active scene's data from the world.
@@ -51,67 +53,43 @@ class Game:
             verb, raw_args = raw_input.split(maxsplit=1)
         except:
             verb, raw_args = raw_input, None
-        print(
-            f"""===============================
-verb: {verb}"""
-        )
+        self.output.emit(f"verb: {verb}", "debug")
         if self.player.in_dialog:
-            print("Handle REPLY")
+            self.output.emit("PLAYER IN DIALOG MODE", "debug")
             self.determine_response(verb)
             return
         if verb not in COMMANDS:
-            print("BAD COMMAND. verb not in COMMANDS. RETRY")
+            self.output.emit(
+                "I don't understand that command. Type 'help' to see what you can do.",
+                "system",
+            )
             return
-        print(
-            f"""===============================
-modifiers: {COMMANDS[verb]["modifiers"]}"""
-        )
-        print(
-            f"""===============================
-raw args: {raw_args}"""
-        )
+        self.output.emit(f"modifiers: {COMMANDS[verb]["modifiers"]}", "debug")
+        self.output.emit(f"raw args: {raw_args}", "debug")
         try:
             args = raw_args.split()
             target = None
         except:
             args = None
             target = None
-        print(
-            f"""===============================
-args: {args}"""
-        )
+        self.output.emit(f"args: {args}", "debug")
         self.scene = self.world.get_scene(self.current_scene_id)
         self.scene_items = self.scene["objects"]
         self.scene_npcs = self.world.get_scene_npcs(self.current_scene_id)
-        print(
-            f"""===============================
-scene NPCs: {self.scene_npcs}"""
-        )
-        print(
-            f"""===============================
-scene objects: {self.scene_items.keys()}"""
-        )
+        self.output.emit(f"scene NPCs: {self.scene_npcs}", "debug")
+        self.output.emit(f"scene objects: {self.scene_items.keys()}", "debug")
 
         if not args:
-            print(
-                f"""===============================
-command has no args"""
-            )
+            self.output.emit(f"command has no args", "debug")
             return self.execute_command(COMMANDS[verb]["default_action"])
         if args:
             for arg in args:
-                print(
-                    f"""===============================
-ARG: {arg}"""
-                )
+                self.output.emit(f"ARG: {arg}", "debug")
                 if arg == "around":
-                    print(
-                        """===============================
-RUNNING MODIFIED LOOK COMMAND"""
-                    )
+                    self.output.emit("RUNNING MODIFIED LOOK COMMAND", "debug")
                     return self.execute_command(COMMANDS[verb]["modifiers"][arg])
                 if arg in self.scene_items:
-                    print(f"is item: {arg in self.scene_items}")
+                    self.output.emit(f"is item: {arg in self.scene_items}", "debug")
                     target = arg
                     if self.scene_items[arg]["can_talk"]:
                         self.dialog_id_base = f"{target}_{self.player.scene_id}"
@@ -122,15 +100,18 @@ RUNNING MODIFIED LOOK COMMAND"""
                 else:
                     for exit in self.scene["exits"]:
                         if arg == self.scene["exits"][exit]["destination"]:
-                            print(
-                                f"target is destination: {self.scene["exits"][exit]["destination"]}"
+                            self.output.emit(
+                                f"target is destination: {self.scene["exits"][exit]["destination"]}",
+                                "debug",
                             )
                             target = arg
                             break
                     for npc in self.scene_npcs:
                         if arg == npc.id:
-                            print(f"is item: {arg in self.scene_items}")
-                            print(f"is npc: {arg == npc.id}")
+                            self.output.emit(
+                                f"is item: {arg in self.scene_items}", "debug"
+                            )
+                            self.output.emit(f"is npc: {arg == npc.id}", "debug")
                             target = arg
                             self.dialog_id_base = f"{target}_{self.player.scene_id}"
                             self.dialog_intro = DIALOGUES[self.dialog_id_base]["intro"]
@@ -140,80 +121,82 @@ RUNNING MODIFIED LOOK COMMAND"""
                             self.dialog_count = 1
                             break
             if target is None:
-                return print(
-                    "That didn't work..if your target should be there, check your spelling!"
+                self.output.emit(
+                    "You can't seem to find that here. If it should be, check your spelling and try again.",
+                    "system",
                 )
-        print(
-            f"""===============================
-target: {target}"""
-        )
+        self.output.emit(f"target: {target}", "debug")
         if len(args) < COMMANDS[verb]["min_args"]:
-            print("COMMAND NEEDS MORE ARGUMENTS")
-            return
-        if len(args) > COMMANDS[verb]["max_args"]:
-            print("COMMAND HAS TOO MANY ARGS!")
-            return
-        for arg in args:
-            print(
-                f"""===============================
-arg: {arg}"""
+            return self.output.emit(
+                "You haven't given enough information to do that.", "system"
             )
+        if len(args) > COMMANDS[verb]["max_args"]:
+            return self.output.emit(
+                "That's a bit much at once. Try a simpler command.", "system"
+            )
+        for arg in args:
+            self.output.emit(f"arg: {arg}", "debug")
             if arg in COMMANDS[verb]["modifiers"]:
                 return self.execute_command(COMMANDS[verb]["modifiers"][arg], target)
         return self.execute_command(COMMANDS[verb]["default_action"], target)
 
     def determine_response(self, option):
+        if option == "help":
+            return self.execute_command(option)
+        if option == "quit":
+            return sys.exit()
         try:
             option = int(option)
-            print(
-                f"""===============================
-DIALOG OPTIONS: {self.dialog_options}"""
-            )
+            self.output.emit(f"DIALOG OPTIONS: {self.dialog_options}", "debug")
             if option in self.dialog_options:
-                print(self.dialog_options[option]["npc"])
+                self.output.emit(self.dialog_options[option]["npc"], "dialogue_npc")
                 if self.dialog_options[option]["outcome"] == "go_next":
                     self.dialog_count += 1
                     self.dialog_id = f"{self.dialog_id_base}_{self.dialog_count}"
                     self.dialog_intro = DIALOGUES[self.dialog_id]["intro"]
                     self.dialog_options = DIALOGUES[self.dialog_id]["options"]
-                    print(
-                        f"""===============================
-DIALOG ID: {self.dialog_id}"""
-                    )
-                    return self.player.talk(self.dialog_intro, self.dialog_options)
+                    self.output.emit(f"DIALOG ID: {self.dialog_id}", "debug")
+                    lines = self.player.talk(self.dialog_intro, self.dialog_options)
+                    for line in lines:
+                        self.output.emit(line, "dialogue_pc")
+                    return
                 if self.dialog_options[option]["outcome"] == "good":
-                    print("THIS IS THE GOOD OUTCOME BEING HIT")
+                    self.output.emit("THIS IS THE GOOD OUTCOME BEING HIT", "debug")
                     for exit in self.scene["exits"]:
                         if self.scene["exits"][exit]["unlocked_via"] == self.talking_to:
                             self.scene["exits"][exit]["status"] = "unlocked"
+                            self.output.emit(
+                                self.scene["exits"][exit]["on_unlock"], "event"
+                            )
                             self.player.in_dialog = not self.player.in_dialog
                             return
-                    print("OUTCOME GOOD BUT NO MATCH - LINE 183")
+                    return self.output.emit(
+                        "You feel like something should have changed... but nothing happens.",
+                        "system",
+                    )
                 if self.dialog_options[option]["outcome"] == "neutral":
                     self.player.in_dialog = not self.player.in_dialog
-                    return print("NOTHING HAPPENED...")
+                    return self.output.emit("Nothing seems to happen.", "system")
                 if self.dialog_options[option]["outcome"] == "bad":
-                    print(
-                        """===============================
-OOPS! YOU SHOULD NOT HAVE SAID THAT!
-==============================="""
+                    self.output.emit(
+                        "The moment the words leave your mouth, you know you've made a mistake.",
+                        "system",
                     )
-                    print(
-                        """===============================
-GAME OVER
-==============================="""
-                    )
+                    self.output.emit("Everything goes dark.\nGAME OVER.", "system")
                     return sys.exit()
                 else:
                     self.player.in_dialog = not self.player.in_dialog
-                    return print(self.dialog_options[option]["npc"])
-            return print("Invalid reply.. check your input and try again!")
-        except ValueError:
-            print(
-                """===============================
-CANNOT CONVERT TO INT"""
+                    return self.output.emit(
+                        self.dialog_options[option]["npc"], "dialogue_pc"
+                    )
+            return self.output.emit(
+                "Invalid reply.. check your input and try again!", "system"
             )
-            return print("Invalid reply.. start over (for now..)!")
+        except ValueError:
+            self.output.emit("Cannot convert to INT!", "debug")
+            return self.output.emit(
+                "That's not a valid choice. Type the number of your reply.", "system"
+            )
 
     def execute_command(
         self,
@@ -222,7 +205,7 @@ CANNOT CONVERT TO INT"""
     ):
         match cmd:
             case "help":
-                return print(
+                return self.output.emit(
                     """
 This is a text adventure. You type commands. The parser pretends to understand them.
 
@@ -243,71 +226,98 @@ Examples:
   "go to the hallway"
   "talk to juno"
 
-Keep commands simple: one verb plus a target or modifier."""
+Keep commands simple: one verb plus a target or modifier.""",
+                    "system",
                 )
             case "examine":
                 if not target:
-                    return print("What are you trying to examine?")
+                    return self.output.emit(
+                        "What exactly are you trying to examine?", "system"
+                    )
                 if target in self.scene["exits"]:
                     if self.scene["exits"][target]["status"] == "locked":
-                        print(self.scene["exits"][target]["description_locked"])
+                        self.output.emit(
+                            self.scene["exits"][target]["description_locked"]
+                        )
                     else:
-                        print(self.scene["exits"][target]["description_unlocked"])
-                    print("This seems to be the way out of this room.")
-                    print(f"Leads to '{self.scene["exits"][target]["destination"]}'")
+                        self.output.emit(
+                            self.scene["exits"][target]["description_unlocked"]
+                        )
+                    self.output.emit("This looks like the way out of this room.")
+                    self.output.emit(
+                        f"It should lead to '{self.scene['exits'][target]['destination']}'."
+                    )
                     return
 
-                return print(self.scene["objects"][target]["description"])
+                return self.output.emit(
+                    self.scene["objects"][target]["description"]
+                )
             case "look_around":
-                print("You take a look around the room...")
-                print(f"The following objects catch your attention. They might provide valuable information if examined closely.")
-                print(list(self.scene_items.keys()))
+                self.output.emit("You take a slow look around the room...")
+                self.output.emit(
+                    f"A few things stand out to you. They might be worth examining more closely:"
+                )
+                self.output.emit(", ".join(self.scene_items.keys()))
                 for npc in self.scene_npcs:
-                    print(f"You see {npc.name} standing there.")
+                    self.output.emit(f"You see {npc.name} standing there.")
             case "use":
                 if not target:
-                    return print("Use WHAT exactly!?")
+                    return self.output.emit("Use what, exactly?", "system")
                 if target in self.scene["exits"]:
                     if self.scene["exits"][target]["status"] == "locked":
-                        return print(self.scene["exits"][target]["description_locked"])
+                        return self.output.emit(
+                            self.scene["exits"][target]["description_locked"]
+                        )
                     self.player.move_to(self.scene["exits"][target]["destination"])
                     self.change_scene(self.scene["exits"][target]["destination"])
-                    print("IMPLEMENT CHANGE SCENE FUNC AND CALL HERE")
                     return
                 if target in self.scene_items:
                     if self.scene["objects"][target]["kind"] == "hint":
-                        return print(self.scene["objects"][target]["description"])
+                        return self.output.emit(
+                            self.scene["objects"][target]["description"], "hint"
+                        )
                     if self.scene["objects"][target]["kind"] == "scenery":
-                        return print("This is not an item you can use!")
+                        return self.output.emit(
+                            "That isn't something you can really use.", "system"
+                        )
                     if self.scene["objects"][target]["can_take"]:
                         if self.scene_items[target]["needs_item"]:
-                            return print(
-                                f"You'll need to have a(n) '{self.scene_items[target]["needs_item"]}' before you can use this {target}.\n"
-                                "It might be worth picking up for later..."
+                            return self.output.emit(
+                                f"You'll need a '{self.scene_items[target]['needs_item']}' before you can use the {target}.\n"
+                                "It might be worth holding onto for later..."
                             )
-                        return print("Seems useful, you should take that with you!")
+                        return self.output.emit(
+                            "This might be useful later. You should probably take it with you."
+                        )
                     elif self.scene["objects"][target]["can_talk"]:
-                        print(
-                            """===============================
-THIS IS A TALKING OBJECT LIKE THE INTERCOM (MAYBE TERMINAL)"""
+                        self.output.emit(
+                            "THIS IS A TALKING OBJECT LIKE THE INTERCOM (MAYBE TERMINAL)",
+                            "debug",
                         )
                         self.player.in_dialog = not self.player.in_dialog
                         self.talking_to = target
-                        return self.player.talk(self.dialog_intro, self.dialog_options)
-                return print("TRYING TO USE SOMETHING THAT'S NOT THERE WON'T WORK")
+                        lines = self.player.talk(self.dialog_intro, self.dialog_options)
+                        for line in lines:
+                            self.output.emit(line, "choice")
+                        return
+                return self.output.emit(
+                    "You fumble around, but there's nothing like that here to use."
+                )
             case "take":
                 if not target:
-                    return print("You need to specify WHAT you want to pick up!")
+                    return self.output.emit("What are you trying to pick up?", "system")
                 if self.scene_items[target]["can_take"]:
                     self.player.add_item_to_inventory(self.scene["objects"][target])
                     del self.scene_items[target]
                     return
                 if self.scene_items[target]["kind"] == "hint":
-                    return print(self.scene_items[target]["description"])
-                return print("You cannot pick this up...")
+                    return self.output.emit(
+                        self.scene_items[target]["description"], "hint"
+                    )
+                return self.output.emit("You can't pick that up.", "system")
             case "talk":
                 if not target:
-                    return print("Who do you wanna talk to!?")
+                    return self.output.emit("Who are you trying to talk to?", "system")
                 for npc in self.scene_npcs:
                     if (
                         target.lower() == str(npc.id).lower()
@@ -315,24 +325,31 @@ THIS IS A TALKING OBJECT LIKE THE INTERCOM (MAYBE TERMINAL)"""
                     ):
                         self.player.in_dialog = not self.player.in_dialog
                         self.talking_to = npc.id
-                        return self.player.talk(self.dialog_intro, self.dialog_options)
+                        lines = self.player.talk(self.dialog_intro, self.dialog_options)
+                        for line in lines:
+                            self.output.emit(line, "choice")
+                        return
                 if self.scene_items[target]["can_talk"]:
                     self.player.in_dialog = not self.player.in_dialog
                     self.talking_to = target
-                    return self.player.talk(self.dialog_intro, self.dialog_options)
-                print("TALK TO THE THING/NPC")
+                    lines = self.player.talk(self.dialog_intro, self.dialog_options)
+                    for line in lines:
+                        self.output.emit(line, "choice")
+                    return
+                self.output.emit("There's no one like that here to talk to.", "system")
             case "exit_room":
                 if not target:
-                    return print("Go where exactly?!")
+                    return self.output.emit("Go where, exactly?", "system")
                 for exit in self.scene["exits"]:
                     if self.scene["exits"][exit]["destination"] == target:
                         if self.scene["exits"][exit]["status"] == "locked":
-                            return print(
-                                f"The door leading to {self.scene["exits"][exit]["destination"]} is locked!"
+                            return self.output.emit(
+                                f"The door leading to {self.scene['exits'][exit]['destination']} is locked tight.",
+                                "system",
                             )
                         self.player.move_to(target)
                         self.change_scene(target)
                         return
-                return print("You cannot travel there from your current location")
+                return self.output.emit("You can't get there from here.", "system")
             case "exit_game":
                 sys.exit()

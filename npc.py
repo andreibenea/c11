@@ -7,8 +7,10 @@ class NonPlayerCharacter:
         self.type = "npc"
 
     def talk(self, intro: str, potential_replies: dict):
+        lines = [intro]
         i = 1
-        print(intro)
-        for reply in potential_replies:
-            print(f"{i}. {potential_replies[reply][self.type]}")
+        for reply_key in potential_replies:
+            line = f"{i}. {potential_replies[reply_key][self.type]}"
+            lines.append(line)
             i += 1
+        return lines

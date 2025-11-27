@@ -1,6 +1,7 @@
 from npc import NonPlayerCharacter
 from player import Player
 from world import World
+from event_emitter import Output
 from game import Game
 from scenes import SCENES
 
@@ -16,9 +17,10 @@ npcs = {
 }
 
 
+event_emitter = Output()
 player = Player("You", SCENES["c11"]["id"])
 world = World(SCENES, npcs)
-game = Game(player, world)
+game = Game(player, world, event_emitter)
 
 
 game.run()
