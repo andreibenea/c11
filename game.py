@@ -145,7 +145,7 @@ class Game:
                             self.dialog_count = 1
                             break
             if target is None:
-                self.output.emit(
+                return self.output.emit(
                     "You can't seem to find that here. If it should be, check your spelling and try again.",
                     "system",
                 )
@@ -270,6 +270,9 @@ Keep commands simple: one verb plus a target or modifier.""",
                     return self.output.emit(
                         "What exactly are you trying to examine?", "system"
                     )
+                for npc in self.scene_npcs:
+                    if target == npc.id:
+                        return self.output.emit(npc.description)
                 if target in self.scene_items:
                     if self.scene_items[target]["kind"] == "hint":
                         if (
@@ -279,6 +282,9 @@ Keep commands simple: one verb plus a target or modifier.""",
                             self.scene_hints.append(
                                 self.scene_items[target]["dialog_id"]
                             )
+                    return self.output.emit(
+                        self.scene["objects"][target]["description"]
+                    )
                 if target in self.scene["exits"]:
                     if self.scene["exits"][target]["status"] == "locked":
                         self.output.emit(
@@ -293,8 +299,10 @@ Keep commands simple: one verb plus a target or modifier.""",
                         f"It should lead to '{self.scene['exits'][target]['destination']}'."
                     )
                     return
-
-                return self.output.emit(self.scene["objects"][target]["description"])
+                return self.output.emit(
+                    "You can't seem to find that here. If it should be, check your spelling and try again.",
+                    "system",
+                )
             case "look_around":
                 self.output.emit("You take a slow look around the room...")
                 self.output.emit(
@@ -306,6 +314,11 @@ Keep commands simple: one verb plus a target or modifier.""",
             case "use":
                 if not target:
                     return self.output.emit("Use what, exactly?", "system")
+                for npc in self.scene_npcs:
+                    if target == npc.id:
+                        return self.output.emit(
+                            "You can't use a person. Maybe try talking to them instead."
+                        )
                 if target in self.scene["exits"]:
                     if self.scene["exits"][target]["status"] == "locked":
                         return self.output.emit(
@@ -356,16 +369,27 @@ Keep commands simple: one verb plus a target or modifier.""",
             case "take":
                 if not target:
                     return self.output.emit("What are you trying to pick up?", "system")
-                if self.scene_items[target]["can_take"]:
-                    self.player.add_item_to_inventory(self.scene["objects"][target])
-                    del self.scene_items[target]
-                    return
-                if self.scene_items[target]["kind"] == "hint":
-                    if self.scene_items[target]["dialog_id"] not in self.scene_hints:
-                        self.scene_hints.append(self.scene_items[target]["dialog_id"])
-                    return self.output.emit(
-                        self.scene_items[target]["description"], "hint"
-                    )
+                for npc in self.scene_npcs:
+                    if target == npc.id:
+                        return self.output.emit(
+                            "You can't pick them up. That's... not how this works."
+                        )
+                if target in self.scene_items:
+                    if self.scene_items[target]["can_take"]:
+                        self.player.add_item_to_inventory(self.scene["objects"][target])
+                        del self.scene_items[target]
+                        return
+                    if self.scene_items[target]["kind"] == "hint":
+                        if (
+                            self.scene_items[target]["dialog_id"]
+                            not in self.scene_hints
+                        ):
+                            self.scene_hints.append(
+                                self.scene_items[target]["dialog_id"]
+                            )
+                        return self.output.emit(
+                            self.scene_items[target]["description"], "hint"
+                        )
                 return self.output.emit("You can't pick that up.", "system")
             case "talk":
                 if not target:
@@ -381,13 +405,14 @@ Keep commands simple: one verb plus a target or modifier.""",
                         for line in lines:
                             self.output.emit(line, "choice")
                         return
-                if self.scene_items[target]["can_talk"]:
-                    self.player.in_dialog = not self.player.in_dialog
-                    self.talking_to = target
-                    lines = self.player.talk(self)
-                    for line in lines:
-                        self.output.emit(line, "choice")
-                    return
+                if target in self.scene_items:
+                    if self.scene_items[target]["can_talk"]:
+                        self.player.in_dialog = not self.player.in_dialog
+                        self.talking_to = target
+                        lines = self.player.talk(self)
+                        for line in lines:
+                            self.output.emit(line, "choice")
+                        return
                 self.output.emit("There's no one like that here to talk to.", "system")
             case "exit_room":
                 if not target:
