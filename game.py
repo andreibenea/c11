@@ -377,7 +377,7 @@ Keep commands simple: one verb plus a target or modifier.""",
                 if target in self.scene_items:
                     if self.scene_items[target]["can_take"]:
                         self.player.add_item_to_inventory(self.scene["objects"][target])
-                        self.output.emit(f"The {target.lower()} was added to your inventory!")
+                        self.output.emit(f"The {target.lower()} was added to your inventory!", "event")
                         del self.scene_items[target]
                         return
                     if self.scene_items[target]["kind"] == "hint":
