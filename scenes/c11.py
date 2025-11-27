@@ -104,9 +104,9 @@ c11 = {
             "id": "pillow",
             "kind": "hint",
             "description": (
-                "*The pillow from the floor is unzipped slightly. Tucked inside the case is a tightly folded note written in hurried strokes:\n"
+                "The pillow from the floor is unzipped slightly. Tucked inside the case is a tightly folded note written in hurried strokes:\n"
                 "“You're in danger. Come find me. Don't trust anyone.”\n"
-                "The handwriting is unmistakable — Juno's. You return the pillow to where it was, pulse quickening. She must've planted this before everything went dark.*"
+                "The handwriting is unmistakable — Juno's. You return the pillow to where it was, pulse quickening. She must've planted this before everything went dark."
             ),
             "can_take": False,
             "can_talk": False,
@@ -140,7 +140,7 @@ c11 = {
             "description_unlocked": "A reinforced sliding Vault door with its status light glowing green. The lockdown has been cleared; the door will open on command.",
             # optional: custom text or event when attempting to open
             "on_attempt": None,
-            "on_unlock": None,
+            "on_unlock": "A soft chime sounds as the door's status light shifts from yellow to green.",
         }
     },
     "flags": {},

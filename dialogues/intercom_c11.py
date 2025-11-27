@@ -22,9 +22,9 @@ intercom_c11 = {
                 "Someone stole my Pip-Boy and drugged me. I think there's been a security breach."
             ),
             "npc": (
-                "…Say that again?\n"
+                "\"…Say that again?\"\n"
                 "(muffled) C-11 is compromised. Notify Response Team.\n"
-                "Stay where you are. Help is on the way."
+                "\"Stay where you are. Help is on the way.\""
             ),
             "outcome": "bad",  # game over
         },
