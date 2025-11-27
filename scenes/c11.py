@@ -111,6 +111,7 @@ c11 = {
             "can_take": False,
             "can_talk": False,
             "is_exit": False,
+            "dialog_id": "intercom_c11",
         },
         "door": {
             "id": "door",

@@ -12,21 +12,25 @@ from dialogues import DIALOGUES
 
 class Game:
     def __init__(self, player: "Player", world, output: "Output"):
-        # Store references to the active player entity and the world model.
-        # Initialize overall game-state toggles.
-        # Set current_scene_id based on the player's starting location.
+        # ------------------------------[ INITIALIZATION ]------------------------------
+        # Constructs the Game object by linking the active player, world model, and
+        # output emitter. Sets core runtime flags and determines the starting scene
+        # based on the player's initial location. Prepares dialogue and hint tracking.
+        # --------------------------------------------------------------------------------
         self.player = player
         self.world = world
         self.output = output
         self.running = True
         self.current_scene_id = player.scene_id
+        self.scene_dialogues = {}
+        self.scene_hints = []
 
     def run(self):
-        # Main game loop.
-        # 1. Show initial scene description.
-        # 2. Continuously read user input.
-        # 3. Ignore blank lines.
-        # 4. Route input to the command handler.
+        # ------------------------------[ GAME LOOP ]------------------------------
+        # Initializes the first scene display, then enters the primary input cycle.
+        # Continuously reads and sanitizes player commands, ignoring empty input,
+        # and routes valid entries to the command handler for processing.
+        # -------------------------------------------------------------------------
         self.output.emit(self.describe_current_scene(), "scene")
         while self.running:
             raw = input("> ").strip().lower()
@@ -35,20 +39,28 @@ class Game:
             self.handle_command(raw)
 
     def change_scene(self, scene_id: str):
-        # Transition the player to a new scene.
-        # Updates internal scene pointer and prints the scene's description.
+        # ---------------------------[ SCENE TRANSITION ]---------------------------
+        # Updates the player's current scene, then emits the narrative description
+        # of the new location. Handles the visual shift between areas in the world.
+        # ----------------------------------------------------------------------------
         self.current_scene_id = scene_id
         self.output.emit(self.describe_current_scene(), "scene")
 
     def describe_current_scene(self) -> str:
-        # Fetch the active scene's data from the world.
-        # Return the textual description of the scene, without printing.
+        # -------------------------[ SCENE DESCRIPTION ]-------------------------
+        # Retrieves the active scene from the world model and returns its
+        # narrative text block. This function does not print or emit output;
+        # it only provides the description for the caller to display.
+        # -----------------------------------------------------------------------
         scene = self.world.get_scene(self.current_scene_id)
         return scene["description"]
 
     def handle_command(self, raw_input: str):
-        # Dispatch logic based on whether the player is in a dialogue state.
-        # Later, this should route to the parser and command execution system.
+        # -------------------------[ COMMAND ROUTER ]-------------------------
+        # Parses raw player input, resolves verbs and targets, applies
+        # modifiers, and directs execution to the appropriate game actions
+        # or dialogue pathways depending on the current game state.
+        # --------------------------------------------------------------------
         try:
             verb, raw_args = raw_input.split(maxsplit=1)
         except:
@@ -93,8 +105,15 @@ class Game:
                     target = arg
                     if self.scene_items[arg]["can_talk"]:
                         self.dialog_id_base = f"{target}_{self.player.scene_id}"
-                        self.dialog_intro = DIALOGUES[self.dialog_id_base]["intro"]
-                        self.dialog_options = DIALOGUES[self.dialog_id_base]["options"]
+                        self.scene_dialogues[self.dialog_id_base] = DIALOGUES[
+                            self.dialog_id_base
+                        ]
+                        self.dialog_intro = self.scene_dialogues[self.dialog_id_base][
+                            "intro"
+                        ]
+                        self.dialog_options = self.scene_dialogues[self.dialog_id_base][
+                            "options"
+                        ]
                         self.dialog_count = 1
                     break
                 else:
@@ -114,10 +133,15 @@ class Game:
                             self.output.emit(f"is npc: {arg == npc.id}", "debug")
                             target = arg
                             self.dialog_id_base = f"{target}_{self.player.scene_id}"
-                            self.dialog_intro = DIALOGUES[self.dialog_id_base]["intro"]
-                            self.dialog_options = DIALOGUES[self.dialog_id_base][
-                                "options"
+                            self.scene_dialogues[self.dialog_id_base] = DIALOGUES[
+                                self.dialog_id_base
                             ]
+                            self.dialog_intro = self.scene_dialogues[
+                                self.dialog_id_base
+                            ]["intro"]
+                            self.dialog_options = self.scene_dialogues[
+                                self.dialog_id_base
+                            ]["options"]
                             self.dialog_count = 1
                             break
             if target is None:
@@ -141,6 +165,10 @@ class Game:
         return self.execute_command(COMMANDS[verb]["default_action"], target)
 
     def determine_response(self, option):
+        # -------------------[ DIALOGUE RESPONSE LOGIC ]-------------------
+        # Interprets numeric replies, routes outcomes, updates dialogue
+        # state, and triggers world effects such as door unlock events.
+        # -----------------------------------------------------------------
         if option == "help":
             return self.execute_command(option)
         if option == "quit":
@@ -153,10 +181,13 @@ class Game:
                 if self.dialog_options[option]["outcome"] == "go_next":
                     self.dialog_count += 1
                     self.dialog_id = f"{self.dialog_id_base}_{self.dialog_count}"
-                    self.dialog_intro = DIALOGUES[self.dialog_id]["intro"]
-                    self.dialog_options = DIALOGUES[self.dialog_id]["options"]
+                    self.scene_dialogues[self.dialog_id] = DIALOGUES[self.dialog_id]
+                    self.dialog_intro = self.scene_dialogues[self.dialog_id]["intro"]
+                    self.dialog_options = self.scene_dialogues[self.dialog_id][
+                        "options"
+                    ]
                     self.output.emit(f"DIALOG ID: {self.dialog_id}", "debug")
-                    lines = self.player.talk(self.dialog_intro, self.dialog_options)
+                    lines = self.player.talk(self)
                     for line in lines:
                         self.output.emit(line, "dialogue_pc")
                     return
@@ -203,6 +234,11 @@ class Game:
         cmd: str,
         target: str | None = None,
     ):
+        # -----------------------[ COMMAND EXECUTION ]-----------------------
+        # Dispatches parsed commands to their respective handlers, performs
+        # object and exit interactions, manages movement, inventory actions,
+        # and routes dialogue initiation when appropriate.
+        # -------------------------------------------------------------------
         match cmd:
             case "help":
                 return self.output.emit(
@@ -234,6 +270,15 @@ Keep commands simple: one verb plus a target or modifier.""",
                     return self.output.emit(
                         "What exactly are you trying to examine?", "system"
                     )
+                if target in self.scene_items:
+                    if self.scene_items[target]["kind"] == "hint":
+                        if (
+                            self.scene_items[target]["dialog_id"]
+                            not in self.scene_hints
+                        ):
+                            self.scene_hints.append(
+                                self.scene_items[target]["dialog_id"]
+                            )
                 if target in self.scene["exits"]:
                     if self.scene["exits"][target]["status"] == "locked":
                         self.output.emit(
@@ -249,9 +294,7 @@ Keep commands simple: one verb plus a target or modifier.""",
                     )
                     return
 
-                return self.output.emit(
-                    self.scene["objects"][target]["description"]
-                )
+                return self.output.emit(self.scene["objects"][target]["description"])
             case "look_around":
                 self.output.emit("You take a slow look around the room...")
                 self.output.emit(
@@ -272,7 +315,14 @@ Keep commands simple: one verb plus a target or modifier.""",
                     self.change_scene(self.scene["exits"][target]["destination"])
                     return
                 if target in self.scene_items:
-                    if self.scene["objects"][target]["kind"] == "hint":
+                    if self.scene_items[target]["kind"] == "hint":
+                        if (
+                            self.scene_items[target]["dialog_id"]
+                            not in self.scene_hints
+                        ):
+                            self.scene_hints.append(
+                                self.scene_items[target]["dialog_id"]
+                            )
                         return self.output.emit(
                             self.scene["objects"][target]["description"], "hint"
                         )
@@ -296,7 +346,7 @@ Keep commands simple: one verb plus a target or modifier.""",
                         )
                         self.player.in_dialog = not self.player.in_dialog
                         self.talking_to = target
-                        lines = self.player.talk(self.dialog_intro, self.dialog_options)
+                        lines = self.player.talk(self)
                         for line in lines:
                             self.output.emit(line, "choice")
                         return
@@ -311,6 +361,8 @@ Keep commands simple: one verb plus a target or modifier.""",
                     del self.scene_items[target]
                     return
                 if self.scene_items[target]["kind"] == "hint":
+                    if self.scene_items[target]["dialog_id"] not in self.scene_hints:
+                        self.scene_hints.append(self.scene_items[target]["dialog_id"])
                     return self.output.emit(
                         self.scene_items[target]["description"], "hint"
                     )
@@ -325,14 +377,14 @@ Keep commands simple: one verb plus a target or modifier.""",
                     ):
                         self.player.in_dialog = not self.player.in_dialog
                         self.talking_to = npc.id
-                        lines = self.player.talk(self.dialog_intro, self.dialog_options)
+                        lines = self.player.talk(self)
                         for line in lines:
                             self.output.emit(line, "choice")
                         return
                 if self.scene_items[target]["can_talk"]:
                     self.player.in_dialog = not self.player.in_dialog
                     self.talking_to = target
-                    lines = self.player.talk(self.dialog_intro, self.dialog_options)
+                    lines = self.player.talk(self)
                     for line in lines:
                         self.output.emit(line, "choice")
                     return
