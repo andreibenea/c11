@@ -32,14 +32,14 @@ C-ELEVEN/
 ├── world.py
 │
 ├── dialogues/
-│   ├── \_\_init\_\_.py
+│   ├── __init__.py
 │   ├── intercom_c11.py
 │   ├── juno_j23.py
 │   ├── juno_j23_2.py
 │   ├── juno_j23_3.py
 │
 └── scenes/
-    ├── \_\_init\_\_.py
+    ├── __init__.py
     ├── c11.py
     ├── hallway_ground.py
     ├── hallway_upper.py
