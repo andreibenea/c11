@@ -20,7 +20,7 @@ This repository contains the **standalone Python CLI version** of the game.
 ---
 
 ## 📂 Project Structure
-
+```
 C-ELEVEN/
 ├── commands.py
 ├── event_emitter.py
@@ -47,7 +47,7 @@ C-ELEVEN/
     ├── overseer_office.py
     ├── security_office.py
     ├── vault_door_room.py
-
+```
 ---
 
 ## ▶️ Running the Game
