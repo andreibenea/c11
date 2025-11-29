@@ -1,0 +1,40 @@
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# C extensions
+*.so
+
+# Distribution / packaging
+*.egg-info/
+.eggs/
+build/
+dist/
+pip-wheel-metadata/
+
+# Virtual environments
+venv/
+.env/
+.venv/
+ENV/
+
+# PyInstaller
+*.spec
+
+# pytest
+.cache/
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+
+# Pyodide FS dumps (if generated)
+*.jsonl
